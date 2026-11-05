@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Campus Lost and Found Management System - report, search and recover lost belongings on campus." />
+  <title>Campus Lost &amp; Found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ========== 1. NAVIGATION BAR ========== -->
+  <header class="navbar">
+    <div class="container navbar__inner">
+      <a href="#home" class="logo" aria-label="Campus Lost and Found home">
+        <span class="logo__icon" aria-hidden="true">&#128269;</span>
+        <span class="logo__text">Campus<strong>Finder</strong></span>
+      </a>
+
+      <!-- Hamburger button: only visible on small screens -->
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav-links" id="navLinks" aria-label="Main navigation">
+        <a href="#home">Home</a>
+        <a href="#browse">Browse Items</a>
+        <a href="#report">Report Item</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ========== 2. HERO SECTION ========== -->
+    <section class="hero" id="home">
+      <div class="container hero__inner">
+        <p class="hero__eyebrow">Campus Lost &amp; Found Portal</p>
+        <h1>Lost something on campus?<br />Found something that isn't yours?</h1>
+        <p class="hero__text">
+          Report lost or found belongings, search through listings and help fellow students
+          get their things back, all in one place.
+        </p>
+        <div class="hero__actions">
+          <a href="#report" class="btn btn--light">Report an Item</a>
+          <a href="#browse" class="btn btn--outline-light">Browse Listings</a>
+        </div>
+
+        <!-- Live statistics, filled in by JavaScript -->
+        <div class="stats" aria-live="polite">
+          <div class="stats__item"><span class="stats__number" id="statLost">0</span><span class="stats__label">Lost reports</span></div>
+          <div class="stats__item"><span class="stats__number" id="statFound">0</span><span class="stats__label">Found reports</span></div>
+          <div class="stats__item"><span class="stats__number" id="statTotal">0</span><span class="stats__label">Total listings</span></div>
+          <div class="stats__item"><span class="stats__number" id="statReturned">0</span><span class="stats__label">Returned to owner</span></div>
+        </div>
+
+        <!-- Demo help desk number (fictional, for the project demo) -->
+        <div class="helpdesk">
+          <span class="helpdesk__label">Found something or want to claim an item? Call the Help Desk (demo):</span>
+          <a class="helpdesk__number" href="tel:+919000000000" id="heroHelpdesk">+91 90000 00000</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 3-5. BROWSE: TABS + SEARCH + FILTERS + CARDS ========== -->
+    <section class="section" id="browse">
+      <div class="container">
+        <h2 class="section__title">Browse Items</h2>
+        <p class="section__subtitle">Switch between lost and found listings, then search or filter by category.</p>
+
+        <!-- Tabs -->
+        <div class="tabs" role="tablist" aria-label="Item type">
+          <button class="tab tab--active" id="tabLost" role="tab" aria-selected="true" data-type="lost">
+            Lost Items <span class="tab__count" id="countLost">0</span>
+          </button>
+          <button class="tab" id="tabFound" role="tab" aria-selected="false" data-type="found">
+            Found Items <span class="tab__count" id="countFound">0</span>
+          </button>
+        </div>
+
+        <!-- Search + category filter -->
+        <div class="controls">
+          <div class="search">
+            <label for="searchInput" class="sr-only">Search items</label>
+            <input type="search" id="searchInput" placeholder="Search name, location, category..." autocomplete="off" />
+          </div>
+          <div class="select-wrap">
+            <label for="statusSelect" class="sr-only">Filter by status</label>
+            <select id="statusSelect">
+              <option value="all">All statuses</option>
+              <option value="open">Still open</option>
+              <option value="returned">Returned</option>
+            </select>
+          </div>
+          <div class="select-wrap">
+            <label for="sortSelect" class="sr-only">Sort items</label>
+            <select id="sortSelect">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="name">Name (A to Z)</option>
+            </select>
+          </div>
+          <button class="btn btn--secondary" id="resetFiltersBtn" type="button">Clear Filters</button>
+        </div>
+
+        <div class="chips" id="categoryChips" role="group" aria-label="Filter by category">
+          <!-- Category chips are created by JavaScript from the CATEGORIES list -->
+        </div>
+
+        <p class="results-info" id="resultsInfo" aria-live="polite"></p>
+
+        <!-- Item cards go here -->
+        <div class="grid" id="itemsGrid"></div>
+
+        <!-- Shown when nothing matches -->
+        <div class="empty" id="emptyState" hidden>
+          <div class="empty__icon" aria-hidden="true">&#128237;</div>
+          <h3>No items found</h3>
+          <p id="emptyMessage">Try a different search term or clear the filters.</p>
+          <button class="btn btn--primary" id="emptyResetBtn" type="button">Clear Filters</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 6. REPORT FORM ========== -->
+    <section class="section section--alt" id="report">
+      <div class="container container--narrow">
+        <h2 class="section__title">Report an Item</h2>
+        <p class="section__subtitle">Fill in the details below. Fields marked * are required.</p>
+
+        <form id="reportForm" class="form" novalidate>
+          <!-- Lost / Found selector -->
+          <fieldset class="form__group">
+            <legend>I want to report a *</legend>
+            <div class="radio-group">
+              <label class="radio">
+                <input type="radio" name="itemType" value="lost" checked />
+                <span class="radio__box radio__box--lost">I lost an item</span>
+              </label>
+              <label class="radio">
+                <input type="radio" name="itemType" value="found" />
+                <span class="radio__box radio__box--found">I found an item</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="form__row">
+            <div class="form__group">
+              <label for="itemName">Item Name *</label>
+              <input type="text" id="itemName" name="itemName" maxlength="60" placeholder="e.g. Blue Backpack" />
+              <p class="form__error" id="itemNameError" role="alert"></p>
+            </div>
+
+            <div class="form__group">
+              <label for="category">Category *</label>
+              <select id="category" name="category">
+                <option value="">Select a category</option>
+              </select>
+              <p class="form__error" id="categoryError" role="alert"></p>
+            </div>
+          </div>
+
+          <div class="form__row">
+            <div class="form__group">
+              <label for="location" id="locationLabel">Location Last Seen *</label>
+              <input type="text" id="location" name="location" maxlength="80" placeholder="e.g. Central Library, 2nd floor" />
+              <p class="form__error" id="locationError" role="alert"></p>
+            </div>
+
+            <div class="form__group">
+              <label for="date">Date *</label>
+              <input type="date" id="date" name="date" />
+              <p class="form__error" id="dateError" role="alert"></p>
+            </div>
+          </div>
+
+          <div class="form__group">
+            <label for="contact">Contact Information *</label>
+            <input type="text" id="contact" name="contact" maxlength="60" placeholder="Email address or 10-digit phone number" />
+            <p class="form__hint form__hint--left">
+              Just testing? <button type="button" class="link-btn" id="demoContactBtn">Use the demo number</button>
+            </p>
+            <p class="form__error" id="contactError" role="alert"></p>
+          </div>
+
+          <div class="form__group">
+            <label for="description">Description *</label>
+            <textarea id="description" name="description" rows="4" maxlength="300" placeholder="Colour, brand, marks, anything that helps identify the item"></textarea>
+            <p class="form__hint"><span id="descCounter">0</span>/300 characters</p>
+            <p class="form__error" id="descriptionError" role="alert"></p>
+          </div>
+
+          <div class="form__actions">
+            <button type="submit" class="btn btn--primary">Submit Report</button>
+            <button type="reset" class="btn btn--secondary" id="formResetBtn">Reset Form</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========== 7. FOOTER ========== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <p>&copy; <span id="year"></span> Campus Lost &amp; Found. Academic project built with HTML, CSS and JavaScript.</p>
+      <p class="footer__note">Help Desk (demo): <a href="tel:+919000000000">+91 90000 00000</a> &middot; Data is stored only in your browser.</p>
+    </div>
+  </footer>
+
+  <!-- ========== CLAIM / CONTACT DIALOG ========== -->
+  <dialog class="modal" id="claimModal" aria-labelledby="claimTitle">
+    <div class="modal__body">
+      <button type="button" class="modal__close" id="claimClose" aria-label="Close dialog">&times;</button>
+      <p class="modal__eyebrow" id="claimEyebrow">Claim this item</p>
+      <h3 id="claimTitle">Item name</h3>
+      <p class="modal__where" id="claimWhere"></p>
+
+      <div class="contact-box">
+        <span class="contact-box__label">Reporter's contact</span>
+        <span class="contact-box__value" id="claimReporter"></span>
+      </div>
+
+      <div class="contact-box contact-box--highlight">
+        <span class="contact-box__label">Campus Help Desk (demo number)</span>
+        <a class="contact-box__value contact-box__phone" id="claimPhone" href="tel:+919000000000">+91 90000 00000</a>
+        <span class="contact-box__hint">Open 9 AM to 5 PM, Monday to Saturday (demo)</span>
+        <div class="contact-box__actions">
+          <a class="btn btn--primary btn--sm" id="claimCall" href="tel:+919000000000">Call now</a>
+          <button type="button" class="btn btn--secondary btn--sm" id="claimCopy">Copy number</button>
+        </div>
+      </div>
+
+      <h4 class="modal__tipsTitle">Before you collect it</h4>
+      <ul class="modal__tips">
+        <li>Carry your college ID card.</li>
+        <li>Describe one detail that is not in the listing (a mark, a sticker, what is inside).</li>
+        <li>Meet in a public campus place such as the Help Desk or library.</li>
+      </ul>
+
+      <div class="modal__actions">
+        <button type="button" class="btn btn--secondary" id="claimDone">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toast notifications appear here -->
+  <div class="toast-container" id="toastContainer" aria-live="assertive"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
